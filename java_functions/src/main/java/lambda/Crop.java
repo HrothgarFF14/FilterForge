@@ -1,4 +1,4 @@
-package main.java.lambda;
+package lambda;
 
 public class Crop {
 }

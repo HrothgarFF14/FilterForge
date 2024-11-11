@@ -1,4 +1,4 @@
-package main.java.saaf;
+package saaf;
 
 /**
  * A basic Response object that can be consumed by FaaS Inspector
@@ -29,5 +29,9 @@ public class Response {
     @Override
     public String toString() {
         return "value=" + this.getValue() + super.toString();
+    }
+
+    public void setError(String string) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }
