@@ -12,6 +12,50 @@ import java.util.HashMap;
 import javax.imageio.ImageIO;
 
 public class GaussianBlur implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
+    
+    /**
+     * Lambda Function Handler
+     *
+     * @param request Hashmap containing request JSON attributes.
+     * @param context
+     * @return HashMap that Lambda will automatically convert into JSON.
+     */
+    @Override
+    public HashMap<String, Object> handleRequest(HashMap<String, Object> request, Context context) {
+        // Inspect incoming request (for debugging/logging)
+        Inspector inspector = new Inspector();
+        inspector.inspectContainer();
+
+        Response response = new Response();
+
+        try {
+            // Get the base64-encoded image from the request
+            String base64Image = (String) request.get("image");
+            if (base64Image == null || base64Image.isEmpty()) {
+                response.setError("No image data provided.");
+                inspector.consumeResponse(response);
+                return inspector.finish();
+            }
+
+            // Decode the image
+            BufferedImage inputImage = decodeBase64ToImage(base64Image);
+
+            // Apply Gaussian Blur
+            BufferedImage blurredImage = applyGaussianBlur(inputImage, 5, 1.5); // Kernel size 5, sigma 1.5
+
+            // Encode the blurred image back to base64
+            String encodedImage = encodeImageToBase64(blurredImage, "PNG");
+
+            // Set the base64 string in the response
+            response.setValue(encodedImage);
+        } catch (Exception e) {
+            response.setError("Error processing image: " + e.getMessage());
+        }
+
+        // Finalize and return the response
+        inspector.consumeResponse(response);
+        return inspector.finish();
+    }
 
     // Create a Gaussian Kernel
     public static double[][] createGaussianKernel(int size, double sigma) {
@@ -113,48 +157,5 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
         return ImageIO.read(bais);
     }
 
-    /**
-     * Lambda Function Handler
-     *
-     * @param request Hashmap containing request JSON attributes.
-     * @param context
-     * @return HashMap that Lambda will automatically convert into JSON.
-     */
-    @Override
-    public HashMap<String, Object> handleRequest(HashMap<String, Object> request, Context context) {
-        // Inspect incoming request (for debugging/logging)
-        Inspector inspector = new Inspector();
-        inspector.inspectContainer();
-
-        Response response = new Response();
-
-        try {
-            // Get the base64-encoded image from the request
-            String base64Image = (String) request.get("image");
-            if (base64Image == null || base64Image.isEmpty()) {
-                response.setError("No image data provided.");
-                inspector.consumeResponse(response);
-                return inspector.finish();
-            }
-
-            // Decode the image
-            BufferedImage inputImage = decodeBase64ToImage(base64Image);
-
-            // Apply Gaussian Blur
-            BufferedImage blurredImage = applyGaussianBlur(inputImage, 5, 1.5); // Kernel size 5, sigma 1.5
-
-            // Encode the blurred image back to base64
-            String encodedImage = encodeImageToBase64(blurredImage, "PNG");
-
-            // Set the base64 string in the response
-            response.setValue(encodedImage);
-        } catch (Exception e) {
-            response.setError("Error processing image: " + e.getMessage());
-        }
-
-        // Finalize and return the response
-        inspector.consumeResponse(response);
-        return inspector.finish();
-    }
 }
 
