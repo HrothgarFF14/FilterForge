@@ -1,4 +1,4 @@
-package main.java.saaf;
+package saaf;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;

@@ -1,4 +1,4 @@
-package main.java.lambda;
+package lambda;
 
 import com.google.gson.*;
 import saaf.Inspector;

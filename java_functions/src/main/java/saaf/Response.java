@@ -1,4 +1,4 @@
-package main.java.saaf;
+package saaf;
 
 /**
  * A basic Response object that can be consumed by FaaS Inspector
