@@ -1,29 +1,44 @@
-package main.java.lambda;
+package lambda;
 
 /**
  *
  * @author Wes Lloyd
  */
 public class Request {
-
-    String name;
-
-    public String getName() {
-        return name;
+    
+    String base64Image;
+    int kernelSize;
+    int sigma;
+    
+    public String getImage() {
+        return base64Image;
     }
     
-    public String getNameALLCAPS() {
-        return name.toUpperCase();
+    public void setImage(String theBase64Image) {
+        base64Image = theBase64Image;
+    }
+    
+    public int getKernelSize() {
+        return kernelSize;
+    }
+    
+    public void setKernelSize(int theKernelSize) {
+        kernelSize = theKernelSize;
+    }
+    
+    public int getSigma() {
+        return sigma;
+    }
+    
+    public void setSigma(int theSigma) {
+        sigma = theSigma;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
-    public Request(String name) {
-        this.name = name;
+    public Request(String theBase64Image) {
+        base64Image = theBase64Image;
     }
-
+    
     public Request() {
 
     }

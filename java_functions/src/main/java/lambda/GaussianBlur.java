@@ -31,6 +31,7 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
         try {
             // Get the base64-encoded image from the request
             String base64Image = (String) request.get("image");
+            
             if (base64Image == null || base64Image.isEmpty()) {
                 response.setError("No image data provided.");
                 inspector.consumeResponse(response);
@@ -41,7 +42,9 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
             BufferedImage inputImage = decodeBase64ToImage(base64Image);
 
             // Apply Gaussian Blur
-            BufferedImage blurredImage = applyGaussianBlur(inputImage, 5, 1.5); // Kernel size 5, sigma 1.5
+            int kernelSize = request.containsKey("kernelSize") ? (int) request.get("kernelSize") : 5;
+            double sigma = request.containsKey("sigma") ? (double) request.get("sigma") : 1.5;
+            BufferedImage blurredImage = applyGaussianBlur(inputImage, kernelSize, sigma);
 
             // Encode the blurred image back to base64
             String encodedImage = encodeImageToBase64(blurredImage, "PNG");
@@ -55,6 +58,26 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
         // Finalize and return the response
         inspector.consumeResponse(response);
         return inspector.finish();
+    }
+    
+    // Apply the Gaussian Blur to the image using convolution
+    public static BufferedImage applyGaussianBlur(BufferedImage image, int kernelSize, double sigma) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        BufferedImage outputImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+        // Create the Gaussian kernel
+        double[][] kernel = createGaussianKernel(kernelSize, sigma);
+
+        // Apply the convolution to each pixel
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int newPixel = applyKernel(image, x, y, kernel);
+                outputImage.setRGB(x, y, newPixel);
+            }
+        }
+
+        return outputImage;
     }
 
     // Create a Gaussian Kernel
@@ -79,26 +102,6 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
         }
 
         return kernel;
-    }
-
-    // Apply the Gaussian Blur to the image using convolution
-    public static BufferedImage applyGaussianBlur(BufferedImage image, int kernelSize, double sigma) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-        BufferedImage outputImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-
-        // Create the Gaussian kernel
-        double[][] kernel = createGaussianKernel(kernelSize, sigma);
-
-        // Apply the convolution to each pixel
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int newPixel = applyKernel(image, x, y, kernel);
-                outputImage.setRGB(x, y, newPixel);
-            }
-        }
-
-        return outputImage;
     }
 
     // Apply the kernel at a specific pixel location
