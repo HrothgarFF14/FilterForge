@@ -9,6 +9,8 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 public class GaussianBlur implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
@@ -31,10 +33,13 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
         try {
             // Get the base64-encoded image from the request
             String base64Image = (String) request.get("image");
-            
+
+            String errorMessage = null;
             if (base64Image == null || base64Image.isEmpty()) {
-                response.setError("No image data provided.");
-                inspector.consumeResponse(response);
+                errorMessage = "No image data provided";
+            }
+            if (errorMessage != null) {
+                inspector = sendError(inspector, errorMessage, response);
                 return inspector.finish();
             }
 
@@ -43,6 +48,9 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
 
             // Apply Gaussian Blur
             int kernelSize = request.containsKey("kernelSize") ? (int) request.get("kernelSize") : 5;
+            
+            System.out.println((request.containsKey("kernelSize") ? "ITS WORK" : "IT DOESNT"));
+            
             double sigma = request.containsKey("sigma") ? (double) request.get("sigma") : 1.5;
             BufferedImage blurredImage = applyGaussianBlur(inputImage, kernelSize, sigma);
 
@@ -118,7 +126,7 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
                 int py = clamp(y + ky, 0, image.getHeight() - 1);
 
                 int pixel = image.getRGB(px, py);
-                Color color = new Color(pixel);
+                Color color = new Color(pixel, true);
 
                 // Get the color channels
                 r += color.getRed() * kernel[kx + offset][ky + offset];
@@ -147,17 +155,43 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
 
     // Convert the BufferedImage to a base64-encoded string
     public static String encodeImageToBase64(BufferedImage image, String formatName) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(image, formatName, baos);
-        byte[] imageBytes = baos.toByteArray();
-        return Base64.getEncoder().encodeToString(imageBytes);
+        byte[] imageBytes;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ImageIO.write(image, formatName, baos);
+            imageBytes = baos.toByteArray();
+        }
+        
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        String header = "data:image/"+ formatName.toLowerCase() + ";base64,";
+        return header + base64Image;
     }
 
     // Decode a base64-encoded image string to a BufferedImage
     public static BufferedImage decodeBase64ToImage(String base64Image) throws IOException {
+        if(base64Image.contains(",")) base64Image = base64Image.split(",")[1];
         byte[] imageBytes = Base64.getDecoder().decode(base64Image);
         ByteArrayInputStream bais = new ByteArrayInputStream(imageBytes);
         return ImageIO.read(bais);
+    }
+
+    public static Inspector sendError(Inspector theInspector, String theMessage, Response theResponse) {
+        theResponse.setValue("errorMessage: " + theMessage);
+        theInspector.addAttribute("errorMessage", theMessage);
+        theInspector.consumeResponse(theResponse);
+        return theInspector;
+    }
+
+    public static String getFileType(String base64Image) {
+        // Regex pattern to extract the file type from the Base64 header
+        String regex = "data:image/([a-zA-Z0-9]+);base64";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(base64Image);
+
+        if (matcher.find()) {
+            return matcher.group(1); // Return the captured file type
+        } else {
+            return "unknown"; // Return "unknown" if no match is found
+        }
     }
 
 }

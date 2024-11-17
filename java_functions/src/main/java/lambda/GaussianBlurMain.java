@@ -48,7 +48,9 @@ public class GaussianBlurMain implements RequestHandler<HashMap<String, Object>,
 
             // Apply Gaussian Blur
             int kernelSize = request.containsKey("kernelSize") ? (int) request.get("kernelSize") : 5;
+            
             System.out.println((request.containsKey("kernelSize") ? "ITS WORK" : "IT DOESNT"));
+            
             double sigma = request.containsKey("sigma") ? (double) request.get("sigma") : 1.5;
             BufferedImage blurredImage = applyGaussianBlur(inputImage, kernelSize, sigma);
 
@@ -86,7 +88,6 @@ public class GaussianBlurMain implements RequestHandler<HashMap<String, Object>,
         return outputImage;
     }
     
-    
     // Create a Gaussian Kernel
     public static double[][] createGaussianKernel(int size, double sigma) {
         double[][] kernel = new double[size][size];
@@ -110,7 +111,6 @@ public class GaussianBlurMain implements RequestHandler<HashMap<String, Object>,
 
         return kernel;
     }
-
 
     // Apply the kernel at a specific pixel location
     private static int applyKernel(BufferedImage image, int x, int y, double[][] kernel) {
@@ -155,14 +155,20 @@ public class GaussianBlurMain implements RequestHandler<HashMap<String, Object>,
 
     // Convert the BufferedImage to a base64-encoded string
     public static String encodeImageToBase64(BufferedImage image, String formatName) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(image, formatName, baos);
-        byte[] imageBytes = baos.toByteArray();
-        return Base64.getEncoder().encodeToString(imageBytes);
+        byte[] imageBytes;
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ImageIO.write(image, formatName, baos);
+            imageBytes = baos.toByteArray();
+        }
+        
+        String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+        String header = "data:image/"+ formatName.toLowerCase() + ";base64,";
+        return header + base64Image;
     }
 
     // Decode a base64-encoded image string to a BufferedImage
     public static BufferedImage decodeBase64ToImage(String base64Image) throws IOException {
+        if(base64Image.contains(",")) base64Image = base64Image.split(",")[1];
         byte[] imageBytes = Base64.getDecoder().decode(base64Image);
         ByteArrayInputStream bais = new ByteArrayInputStream(imageBytes);
         return ImageIO.read(bais);
@@ -199,17 +205,23 @@ public class GaussianBlurMain implements RequestHandler<HashMap<String, Object>,
         try {
             // Load an image from a local file and encode it in base64
             BufferedImage inputImage = ImageIO.read(new File("/home/jovany/Downloads/input.jpg")); // Replace with your test image
+            
+            
             String base64Image = encodeImageToBase64(inputImage, "JPG");
+            
+            
             request.put("image", base64Image);
-            request.put("kernelSize", 23);
-            request.put("sigma", 7.5);
+            request.put("kernelSize", 13);
+            request.put("sigma", 3.5);
         } catch (IOException e) {
             System.err.println("Error loading input image: " + e.getMessage());
             return;
         }
 
+        
         // Process the request
         HashMap<String, Object> response = blurProcessor.handleRequest(request, null);
+        
 
         // Decode and save the output image
         String base64OutputImage = (String) response.get("value");
@@ -218,6 +230,7 @@ public class GaussianBlurMain implements RequestHandler<HashMap<String, Object>,
                 BufferedImage outputImage = decodeBase64ToImage(base64OutputImage);
                 ImageIO.write(outputImage, "PNG", new File("output.png")); // Save the output image
                 System.out.println("Blurred image saved as output.png");
+                System.out.println("Function Result: " + response.toString());
             } catch (IOException e) {
                 System.err.println("Error saving output image: " + e.getMessage());
             }
