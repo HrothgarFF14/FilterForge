@@ -1,30 +1,42 @@
 package lambda;
 
-/**
- *
- * @author Wes Lloyd
- */
 public class Request {
 
-    String name;
+    private String imageString; // Base64-encoded image string
+    private int width;          // Desired width
+    private int height;         // Desired height
 
-    public String getName() {
-        return name;
-    }
-    
-    public String getNameALLCAPS() {
-        return name.toUpperCase();
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    // Getters and Setters
+    public String getImageString() {
+        return imageString;
     }
 
-    public Request(String name) {
-        this.name = name;
+    public void setImageString(String imageString) {
+        this.imageString = imageString;
     }
 
-    public Request() {
+    public int getWidth() {
+        return width;
+    }
 
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    // Constructors
+    public Request() {}
+
+    public Request(String imageString, int width, int height) {
+        this.imageString = imageString;
+        this.width = width;
+        this.height = height;
     }
 }
