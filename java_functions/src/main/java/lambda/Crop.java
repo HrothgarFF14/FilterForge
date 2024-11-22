@@ -3,7 +3,6 @@ package lambda;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import saaf.Inspector;
-import saaf.Response;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -12,6 +11,10 @@ import java.util.Base64;
 import java.util.HashMap;
 import javax.imageio.ImageIO;
 
+/**
+ * This class implements a Lambda function handler for cropping an image.
+ * @author Louis Lomboy
+ */
 public class Crop implements RequestHandler<Request, HashMap<String, Object>> {
 
     /**
