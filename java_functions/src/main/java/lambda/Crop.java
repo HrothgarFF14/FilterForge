@@ -1,14 +1,18 @@
 package lambda;
 
+
+
 import com.amazonaws.services.lambda.runtime.Context;
+
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import saaf.Inspector;
 
+import java.util.HashMap;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.Base64;
-import java.util.HashMap;
+
 import javax.imageio.ImageIO;
 
 /**
