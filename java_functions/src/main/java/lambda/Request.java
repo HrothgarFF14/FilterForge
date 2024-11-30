@@ -11,6 +11,9 @@ public class Request {
     private int y;
     private int width;
     private int height;
+    private String bucketname;
+    private String filename;
+    private String outputFilename;
 
     public String getName() {
         return name;
@@ -64,6 +67,24 @@ public class Request {
         this.height = height;
     }
 
+    public String getBucketname() { return bucketname; }
+
+    public void setBucketname(String bucketname) { this.bucketname = bucketname; }
+
+    public String getFilename() { return filename; }
+
+    public void setFilename(String filename) { this.filename = filename; }
+
+    public String getOutputFilename() {
+        return outputFilename;
+    }
+
+    public void setOutputFilename(String outputFilename) {
+        this.outputFilename = outputFilename;
+    }
+
+    public Request(String name) { this.name = name; }
+
     public Request(String name, String image, int x, int y, int width, int height) {
         this.name = name;
         this.image = image;
@@ -75,4 +96,6 @@ public class Request {
 
     public Request() {
     }
+
+
 }

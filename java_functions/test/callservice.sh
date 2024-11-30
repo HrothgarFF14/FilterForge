@@ -1,28 +1,33 @@
 #!/bin/bash
 
 # Check if the correct number of arguments is provided
-if [ "$#" -ne 6 ]; then
-    echo "Usage: $0 <imagePath> <x> <y> <width> <height> <outputPath>"
+if [ "$#" -ne 7 ]; then
+    echo "Usage: $0 <bucketname> <filename> <x> <y> <width> <height> <outputFilename>"
     exit 1
 fi
 
 # Assign arguments to variables
-imagePath=$1
-x=$2
-y=$3
-width=$4
-height=$5
-outputPath=$6
+bucketname=$1
+filename=$2
+x=$3
+y=$4
+width=$5
+height=$6
+outputFilename=$7
 
-# Read the image file and encode it to base64
-base64Image=$(base64 "$imagePath")
+# Upload the image to S3
+aws s3 cp "$filename" "s3://$bucketname/$filename"
 
 # Create the JSON payload
-payload=$(jq -n --arg img "$base64Image" --arg x "$x" --arg y "$y" --arg width "$width" --arg height "$height" \
-    '{image: $img, x: ($x|tonumber), y: ($y|tonumber), width: ($width|tonumber), height: ($height|tonumber)}')
+json=$(jq -n --arg bucketname "$bucketname" --arg filename "$filename" --arg outputFilename "$outputFilename" --arg x "$x" --arg y "$y" --arg width "$width" --arg height "$height" \
+    '{bucketname: $bucketname, filename: $filename, outputFilename: $outputFilename, x: ($x|tonumber), y: ($y|tonumber), width: ($width|tonumber), height: ($height|tonumber)}')
+
+# Print the JSON payload for debugging
+echo "JSON Payload: $json"
 
 # Invoke the Lambda function
-response=$(aws lambda invoke --function-name filterForge-java-crop --payload "$payload" response.json)
+echo "Invoking Lambda function using AWS CLI..."
+response=$(aws lambda invoke --invocation-type RequestResponse --function-name filterForge-java-crop --region us-east-1 --payload "$json" response.json)
 
 # Check if the invocation was successful
 if [ $? -ne 0 ]; then
@@ -30,10 +35,4 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Extract the base64 encoded cropped image from the response
-croppedImageBase64=$(jq -r '.croppedImage' response.json)
-
-# Decode the base64 image and save it to the output path
-echo "$croppedImageBase64" | base64 --decode > "$outputPath"
-
-echo "Cropped image saved to $outputPath"
+echo "Lambda function invoked successfully. Check the output in S3 bucket."
