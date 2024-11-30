@@ -2,106 +2,124 @@ package lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import saaf.Inspector;
-
-import java.util.HashMap;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.util.Base64;
+import saaf.Response;
 
 import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.HashMap;
 
 /**
- * This class implements a Lambda function handler for cropping an image.
- * @author Louis Lomboy
+ * AWS Lambda function that crops an image stored in an S3 bucket.
  */
-public class Crop implements RequestHandler<Request, HashMap<String, Object>> {
+public class Crop implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
 
     /**
-     * Lambda Function Handler
+     * Handles a Lambda Function request to crop an image stored in an S3 bucket.
      *
-     * @param theRequest Request POJO with defined variables from Request.java
-     * @param theContext
-     * @return HashMap that Lambda will automatically convert into JSON.
+     * @param theRequest The Lambda Function input
+     * @param theContext The Lambda execution environment context object.
+     * @return the response containg the result of the image cropping operation.
      */
-    public HashMap<String, Object> handleRequest(Request theRequest, Context theContext) {
+    @Override
+    public HashMap<String, Object> handleRequest(HashMap<String, Object> theRequest, Context theContext) {
+        Inspector myInspector = new Inspector();
+        myInspector.inspectContainer();
+        Response myResponse = new Response();
 
-        // Collect initial data.
-        Inspector inspector = new Inspector();
-        inspector.inspectAll();
+        AmazonS3 myS3Client = AmazonS3ClientBuilder.standard().build();
 
-        //****************START FUNCTION IMPLEMENTATION*************************
-        HashMap<String, Object> responseMap = new HashMap<>();
         try {
-            // Decode the base64 image
-            BufferedImage image = base64ToBufferedImage(theRequest.getImage());
+            // Extract S3 details from the request
+            String myInputBucket = (String) theRequest.get("inputBucket");
+            String myOutputBucket = (String) theRequest.get("outputBucket");
+            String myFilename = (String) theRequest.get("filename");
+            String myOutputFilename = (String) theRequest.get("outputFilename");
+            int myX = (int) theRequest.get("x");
+            int myY = (int) theRequest.get("y");
+            int myWidth = (int) theRequest.get("width");
+            int myHeight = (int) theRequest.get("height");
 
-            // Validate crop dimensions
-            if (!validateCropDimensions(image, theRequest.getX(), theRequest.getY(), theRequest.getWidth(), theRequest.getHeight())) {
-                throw new IllegalArgumentException("Invalid crop dimensions");
+            if (myInputBucket == null || myOutputBucket == null || myFilename == null || myOutputFilename == null) {
+                throw new IllegalArgumentException("Missing required S3 parameters: inputBucket, outputBucket, filename, outputFilename");
             }
 
+            // Download the image from S3
+            BufferedImage myInputImage = downloadImageFromS3(myS3Client, myInputBucket, myFilename);
+
             // Crop the image
-            BufferedImage croppedImage = image.getSubimage(theRequest.getX(), theRequest.getY(), theRequest.getWidth(), theRequest.getHeight());
-            BufferedImage copyOfCroppedImage = new BufferedImage(croppedImage.getWidth(), croppedImage.getHeight(), image.getType());
-            copyOfCroppedImage.createGraphics().drawImage(croppedImage, 0, 0, null);
+            BufferedImage myCroppedImage = cropImage(myInputImage, myX, myY, myWidth, myHeight);
 
-            // Encode the cropped image to base64
-            String base64CroppedImage = bufferedImageToBase64(copyOfCroppedImage);
+            // Upload the processed image back to S3
+            uploadImageToS3(myS3Client, myCroppedImage, myOutputBucket, myOutputFilename, "png");
 
-            // Add the cropped image to the response
-            responseMap.put("croppedImage", base64CroppedImage);
+            myResponse.setValue("Image processed and stored at s3://" + myOutputBucket + "/" + myOutputFilename);
         } catch (Exception e) {
-            inspector.addAttribute("error", e.getMessage());
+            myResponse.setError("Error processing image: " + e.getMessage());
         }
 
-        //****************END FUNCTION IMPLEMENTATION***************************
+        myInspector.consumeResponse(myResponse);
+        return myInspector.finish();
+    }
 
-        // Collect final information such as total runtime and CPU deltas.
-        inspector.inspectAllDeltas();
-        responseMap.putAll(inspector.finish());
-        return responseMap;
+
+    /**
+     * Downloads an image from an S3 bucket.
+     *
+     * @param theS3Client The Amazon S3 client used to interact with S3.
+     * @param theBucket The name of the S3 bucket.
+     * @param theKey The key (filename) of the image in the S3 bucket.
+     * @return The downloaded image as a BufferedImage.
+     * @throws IOException If an error occurs during the download or reading of the image.
+     */
+    private BufferedImage downloadImageFromS3(AmazonS3 theS3Client, String theBucket, String theKey) throws IOException {
+        GetObjectRequest getObjectRequest = new GetObjectRequest(theBucket, theKey);
+        try (InputStream inputStream = theS3Client.getObject(getObjectRequest).getObjectContent()) {
+            return ImageIO.read(inputStream);
+        }
     }
 
     /**
-     * Validates the crop dimensions to ensure they are within the bounds of the source image.
+     * Uploads an image to an S3 bucket.
      *
-     * @param image the source image
-     * @param x the x coordinate of the upper-left corner of the specified rectangular region
-     * @param y the y coordinate of the upper-left corner of the specified rectangular region
-     * @param width the width of the specified rectangular region
-     * @param height the height of the specified rectangular region
-     * @return true if the dimensions are valid, false otherwise
+     * @param theS3Client The Amazon S3 client used to interact with S3.
+     * @param theImage The image to be uploaded.
+     * @param theBucket The name of the S3 bucket.
+     * @param theKey The key (filename) for the uploaded image.
+     * @param theFormat The format of the image (e.g., "png").
+     * @throws IOException If an error occurs during the upload.
      */
-    private boolean validateCropDimensions(BufferedImage image, int x, int y, int width, int height) {
-        return x >= 0 && y >= 0 && width > 0 && height > 0 && x + width <= image.getWidth() && y + height <= image.getHeight();
+    private void uploadImageToS3(AmazonS3 theS3Client, BufferedImage theImage, String theBucket, String theKey, String theFormat) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(theImage, theFormat, baos);
+        byte[] imageBytes = baos.toByteArray();
+
+        ObjectMetadata metadata = new ObjectMetadata();
+        metadata.setContentLength(imageBytes.length);
+        metadata.setContentType("image/" + theFormat);
+
+        try (InputStream inputStream = new ByteArrayInputStream(imageBytes)) {
+            theS3Client.putObject(new PutObjectRequest(theBucket, theKey, inputStream, metadata));
+        }
     }
 
     /**
-     * Converts a BufferedImage to a base64 string.
+     * Crops an image to the specified dimensions.
      *
-     * @param image the BufferedImage to convert
-     * @return the base64 string representation of the image
-     * @throws Exception if an error occurs during encoding
+     * @param theImage The image to be cropped.
+     * @param theX The x-coordinate of the upper-left corner of the cropping rectangle.
+     * @param theY The y-coordinate of the upper-left corner of the cropping rectangle.
+     * @param theWidth The width of the cropping rectangle.
+     * @param theHeight The height of the cropping rectangle.
+     * @return The cropped image as a BufferedImage.
      */
-    private String bufferedImageToBase64(BufferedImage image) throws Exception {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ImageIO.write(image, "png", bos);
-        byte[] imageBytes = bos.toByteArray();
-        return Base64.getEncoder().encodeToString(imageBytes);
-    }
-
-    /**
-     * Converts a base64 string to a BufferedImage.
-     *
-     * @param base64Image the base64 string to convert
-     * @return the BufferedImage
-     * @throws Exception if an error occurs during decoding
-     */
-    private BufferedImage base64ToBufferedImage(String base64Image) throws Exception {
-        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-        ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
-        return ImageIO.read(bis);
+    private BufferedImage cropImage(BufferedImage theImage, int theX, int theY, int theWidth, int theHeight) {
+        return theImage.getSubimage(theX, theY, theWidth, theHeight);
     }
 }

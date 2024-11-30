@@ -1,38 +1,22 @@
 #!/bin/bash
 
-# Check if the correct number of arguments is provided
-if [ "$#" -ne 7 ]; then
-    echo "Usage: $0 <bucketname> <filename> <x> <y> <width> <height> <outputFilename>"
-    exit 1
-fi
+# Define the variables
+inputBucket="filterforge-uploads"
+outputBucket="filterforge-uploads"
+filename="med-img.png"
+x=0
+y=0
+width=100
+height=100
+outputFilename="myCroppedMedImg.png"
 
-# Assign arguments to variables
-bucketname=$1
-filename=$2
-x=$3
-y=$4
-width=$5
-height=$6
-outputFilename=$7
+# JSON object to pass to Lambda Function
+json=$(jq -n --arg inputBucket "$inputBucket" --arg outputBucket "$outputBucket" --arg filename "$filename" --arg x "$x" --arg y "$y" --arg width "$width" --arg height "$height" --arg outputFilename "$outputFilename" \
+    '{inputBucket: $inputBucket, outputBucket: $outputBucket, filename: $filename, x: ($x|tonumber), y: ($y|tonumber), width: ($width|tonumber), height: ($height|tonumber), outputFilename: $outputFilename}')
 
-# Upload the image to S3
-aws s3 cp "$filename" "s3://$bucketname/$filename"
+echo "Invoking Lambda function using API Gateway"
+time output=$(aws lambda invoke --invocation-type RequestResponse --cli-binary-format raw-in-base64-out --function-name filterForge-java-crop --region us-east-1 --payload "$json" /dev/stdout | head -n 1 | head -c -2 ; echo)
 
-# Create the JSON payload
-json=$(jq -n --arg bucketname "$bucketname" --arg filename "$filename" --arg outputFilename "$outputFilename" --arg x "$x" --arg y "$y" --arg width "$width" --arg height "$height" \
-    '{bucketname: $bucketname, filename: $filename, outputFilename: $outputFilename, x: ($x|tonumber), y: ($y|tonumber), width: ($width|tonumber), height: ($height|tonumber)}')
-
-# Print the JSON payload for debugging
-echo "JSON Payload: $json"
-
-# Invoke the Lambda function
-echo "Invoking Lambda function using AWS CLI..."
-response=$(aws lambda invoke --invocation-type RequestResponse --function-name filterForge-java-crop --region us-east-1 --payload "$json" response.json)
-
-# Check if the invocation was successful
-if [ $? -ne 0 ]; then
-    echo "Error: Failed to invoke Lambda function."
-    exit 1
-fi
-
-echo "Lambda function invoked successfully. Check the output in S3 bucket."
+echo ""
+echo "JSON RESULT:"
+echo "$output" | jq
