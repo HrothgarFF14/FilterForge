@@ -11,4 +11,7 @@ bash_template/deploy/build/function.zip
 SAAF.code-workspace
 /SAAF/
 /nodejs_template/deploy/node_modules/uuid
+SAAF/nodejs_template/deploy/node_modules/.bin/uuid
+java_functions/java_functions.iml
+/.idea
 /nodejs_template/deploy/node_modules/.bin
