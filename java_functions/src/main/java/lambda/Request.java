@@ -1,101 +1,72 @@
 package lambda;
 
-/**
- * Request class for handling input parameters.
- */
 public class Request {
 
-    private String name;
-    private String image;
-    private int x;
-    private int y;
-    private int width;
-    private int height;
-    private String bucketname;
-    private String filename;
-    private String outputFilename;
+    private String inputBucket;  // Name of the input S3 bucket
+    private String inputKey;     // Key of the input image in the bucket
+    private String outputBucket; // Name of the output S3 bucket
+    private String outputKey;    // Key for the resized image in the bucket
+    private int targetWidth;     // Desired width for resizing
+    private int targetHeight;    // Desired height for resizing
 
-    public String getName() {
-        return name;
+    // Getters and Setters
+    public String getInputBucket() {
+        return inputBucket;
     }
 
-    public String getNameALLCAPS() {
-        return name.toUpperCase();
+    public void setInputBucket(String inputBucket) {
+        this.inputBucket = inputBucket;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public String getInputKey() {
+        return inputKey;
     }
 
-    public String getImage() {
-        return image;
+    public void setInputKey(String inputKey) {
+        this.inputKey = inputKey;
     }
 
-    public void setImage(String image) {
-        this.image = image;
+    public String getOutputBucket() {
+        return outputBucket;
     }
 
-    public int getX() {
-        return x;
+    public void setOutputBucket(String outputBucket) {
+        this.outputBucket = outputBucket;
     }
 
-    public void setX(int x) {
-        this.x = x;
+    public String getOutputKey() {
+        return outputKey;
     }
 
-    public int getY() {
-        return y;
+    public void setOutputKey(String outputKey) {
+        this.outputKey = outputKey;
     }
 
-    public void setY(int y) {
-        this.y = y;
+    public int getTargetWidth() {
+        return targetWidth;
     }
 
-    public int getWidth() {
-        return width;
+    public void setTargetWidth(int targetWidth) {
+        this.targetWidth = targetWidth;
     }
 
-    public void setWidth(int width) {
-        this.width = width;
+    public int getTargetHeight() {
+        return targetHeight;
     }
 
-    public int getHeight() {
-        return height;
+    public void setTargetHeight(int targetHeight) {
+        this.targetHeight = targetHeight;
     }
 
-    public void setHeight(int height) {
-        this.height = height;
+    // Constructors
+    public Request() {}
+
+    public Request(String inputBucket, String inputKey, String outputBucket, String outputKey, int targetWidth, int targetHeight) {
+        this.inputBucket = inputBucket;
+        this.inputKey = inputKey;
+        this.outputBucket = outputBucket;
+        this.outputKey = outputKey;
+        this.targetWidth = targetWidth;
+        this.targetHeight = targetHeight;
     }
-
-    public String getBucketname() { return bucketname; }
-
-    public void setBucketname(String bucketname) { this.bucketname = bucketname; }
-
-    public String getFilename() { return filename; }
-
-    public void setFilename(String filename) { this.filename = filename; }
-
-    public String getOutputFilename() {
-        return outputFilename;
-    }
-
-    public void setOutputFilename(String outputFilename) {
-        this.outputFilename = outputFilename;
-    }
-
-    public Request(String name) { this.name = name; }
-
-    public Request(String name, String image, int x, int y, int width, int height) {
-        this.name = name;
-        this.image = image;
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-    }
-
-    public Request() {
-    }
-
-
 }

@@ -1,22 +1,48 @@
 #!/bin/bash
 
 # Define the variables
-inputBucket="filterforge-uploads"
-outputBucket="filterforge-uploads"
-filename="med-img.png"
-x=0
-y=0
-width=100
-height=100
-outputFilename="myCroppedMedImg.png"
+inputBucket="test.bucket.462562f24.mh"        # Replace with your input bucket name
+outputBucket="test.bucket.462562f24.mh"      # Replace with your output bucket name
+inputKey="Inputimage/med-img.png"                  # Replace with your input file name
+outputKey="outputImage/resizedImage"         # Replace with your desired output file name
 
-# JSON object to pass to Lambda Function
-json=$(jq -n --arg inputBucket "$inputBucket" --arg outputBucket "$outputBucket" --arg filename "$filename" --arg x "$x" --arg y "$y" --arg width "$width" --arg height "$height" --arg outputFilename "$outputFilename" \
-    '{inputBucket: $inputBucket, outputBucket: $outputBucket, filename: $filename, x: ($x|tonumber), y: ($y|tonumber), width: ($width|tonumber), height: ($height|tonumber), outputFilename: $outputFilename}')
+# Resize dimensions
+targetWidth=60                         # Desired width of the resized image
+targetHeight=60                        # Desired height of the resized image
 
-echo "Invoking Lambda function using API Gateway"
-time output=$(aws lambda invoke --invocation-type RequestResponse --cli-binary-format raw-in-base64-out --function-name filterForge-java-crop --region us-east-1 --payload "$json" /dev/stdout | head -n 1 | head -c -2 ; echo)
+# Construct JSON payload using jq
+json=$(jq -n \
+  --arg inputBucket "$inputBucket" \
+  --arg inputKey "$inputKey" \
+  --arg outputBucket "$outputBucket" \
+  --arg outputKey "$outputKey" \
+  --argjson targetWidth "$targetWidth" \
+  --argjson targetHeight "$targetHeight" \
+  '{
+    inputBucket: $inputBucket,
+    inputKey: $inputKey,
+    outputBucket: $outputBucket,
+    outputKey: $outputKey,
+    targetWidth: $targetWidth,
+    targetHeight: $targetHeight
+  }')
 
+echo $json|jq
+
+echo "Invoking Lambda function using AWS CLI (Boto3)"
+#time output=`aws lambda invoke --invocation-type RequestResponse --cli-binary-format raw-in-base64-out --function-name ResizeImage --region us-east-1>
+
+time output=$(aws lambda invoke \
+  --invocation-type RequestResponse \
+  --cli-binary-format raw-in-base64-out \
+  --function-name ResizeImage \
+  --region us-east-1 \
+  --payload "$json" \
+  output.json)
+
+# Print the result
 echo ""
-echo "JSON RESULT:"
-echo "$output" | jq
+echo "Lambda Function Response:"
+cat output.json | jq
+
+
