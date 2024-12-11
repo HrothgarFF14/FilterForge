@@ -1,5 +1,4 @@
 #!/bin/bash
-
 location=$1
 cd "$location" || exit
 

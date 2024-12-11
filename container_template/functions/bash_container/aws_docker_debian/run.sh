@@ -1,4 +1,5 @@
 #!/bin/bash
+json={"\"name\"":"\"Louis\u0020Lomboy\""}
 
 location=$1
 cd "$location" || exit
