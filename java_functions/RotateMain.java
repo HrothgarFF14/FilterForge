@@ -18,6 +18,11 @@ import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.LambdaLogger;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import saaf.Inspector;
 import saaf.Response;
 
@@ -45,37 +50,62 @@ public class RotateMain implements RequestHandler<HashMap<String, Object>, HashM
 
         //****************START FUNCTION IMPLEMENTATION*************************
 
-        try {
-            // Get the base64-encoded image from the request
-            String base64Img = (String) request.get("image");
-            String format = getFileType(base64Img);
-            Double angle = request.containsKey("angle") ? (Double) request.get("angle") : 0;
+try {
+    // Extract input parameters
+    String bucketName = (String) request.get("bucketName");
+    String objectKey = (String) request.get("objectKey");
+    Double angle = request.containsKey("angle") ? (Double) request.get("angle") : 0;
 
-            String errorMessage = null;
-            if (base64Img == null || base64Img.isEmpty()) {
-                errorMessage = "No image data provided";
-            } else if (angle == 0) {
-                errorMessage = "Invalid angle provided";
-            } else if (format == "unknown") {
-                errorMessage = "Invalid base64 header. Please provide filetype";
-            }
-            if (errorMessage != null) {
-                inspector = sendError(inspector, errorMessage, response);
-                return inspector.finish();
-            }
+    // Validate inputs
+    String errorMessage = null;
+    if (bucketName == null || bucketName.isEmpty()) {
+        errorMessage = "No bucket name provided";
+    } else if (objectKey == null || objectKey.isEmpty()) {
+        errorMessage = "No object key provided";
+    } else if (angle == 0) {
+        errorMessage = "Invalid angle provided";
+    }
+    if (errorMessage != null) {
+        inspector = sendError(inspector, errorMessage, response);
+        return inspector.finish();
+    }
 
-            BufferedImage image = decodeBase64(base64Img);
-            image = rotateImage(image, angle);
-            String encodedResizedBase64Image = encodeBase64WithHeader(image, format);
+    // Initialize S3 client
+    AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
 
-            response.setValue(encodedResizedBase64Image);
-            inspector.addAttribute("rotatedImage", encodedResizedBase64Image);
-            inspector.consumeResponse(response);
+    // Download the image from S3
+    S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucketName, objectKey));
+    BufferedImage image = ImageIO.read(s3Object.getObjectContent());
+    String format = "png"; // Adjust based on objectKey or inferred metadata if needed
 
-        } catch (IOException e) {
-            response.setValue("errorMessage: " + e.getMessage());
-            inspector.addAttribute("errorMessage", e.getMessage());
-        }
+    // Rotate the image
+    image = rotateImage(image, angle);
+
+    // Encode the rotated image back to Base64
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ImageIO.write(image, format, outputStream);
+    byte[] rotatedImageBytes = outputStream.toByteArray();
+    outputStream.close();
+
+    // Upload the rotated image back to S3
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(rotatedImageBytes);
+    ObjectMetadata metadata = new ObjectMetadata();
+    metadata.setContentLength(rotatedImageBytes.length);
+    metadata.setContentType("image/" + format); // Set appropriate content type
+    s3Client.putObject(new PutObjectRequest(bucketName, "rotated-" + objectKey, inputStream, metadata));
+    inputStream.close();
+
+    // Add the S3 URI of the uploaded image to the response
+    String rotatedImageUri = String.format("s3://%s/rotated-%s", bucketName, objectKey);
+    response.setValue(rotatedImageUri);
+    inspector.addAttribute("rotatedImageUri", rotatedImageUri);
+    inspector.consumeResponse(response);
+
+} catch (IOException e) {
+    response.setValue("errorMessage: " + e.getMessage());
+    inspector.addAttribute("errorMessage", e.getMessage());
+}
+
 
         
         //****************END FUNCTION IMPLEMENTATION***************************
