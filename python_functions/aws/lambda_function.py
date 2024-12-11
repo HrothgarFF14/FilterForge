@@ -11,5 +11,5 @@ import json
 # @param request
 #
 def lambda_handler(event, context):
-	return handler.yourFunction(event, context)
-	
+	return handler.resizeFunction(event, context)
+	s
