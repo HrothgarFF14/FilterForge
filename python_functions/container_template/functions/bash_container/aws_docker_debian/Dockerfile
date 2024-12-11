@@ -19,6 +19,10 @@ RUN apt-get install -y curl jq
 #RUN curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh | bash
 #RUN apt -y install sysbench
 
+# Install dependencies
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
 # Define and create function directory
 ENV FUNCTION_DIR="/var/task"
 RUN mkdir -p ${FUNCTION_DIR}

@@ -19,17 +19,17 @@ cd ./.build || exit
 
 echo "Creating AWS Registry..."
 region=$(aws configure get region)
-aws ecr create-repository --repository-name saaf-functions --image-scanning-configuration scanOnPush=true
+aws ecr create-repository --repository-name filterforge-functions --image-scanning-configuration scanOnPush=true
 
 echo "Pushing Docker Image..."
 registryID=$(aws ecr describe-registry | jq '.registryId' | tr -d '"')
-docker tag ${function}:latest ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions:${function}
+docker tag ${function}:latest ${registryID}.dkr.ecr.${region}.amazonaws.com/filterforge-functions:${function}
 aws ecr get-login-password | docker login --username AWS --password-stdin ${registryID}.dkr.ecr.${region}.amazonaws.com
-docker push ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions:${function}
+docker push ${registryID}.dkr.ecr.${region}.amazonaws.com/filterforge-functions:${function}
 docker logout
 
 echo "Deploying function..."
-code={\"ImageUri\":\"${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions:${function}\"}
+code={\"ImageUri\":\"${registryID}.dkr.ecr.${region}.amazonaws.com/filterforge-functions:${function}\"}
 
 aws lambda get-function --function-name $function > /dev/null 2>&1
 if [ 0 -eq $? ]; then
@@ -45,7 +45,7 @@ if [ 0 -eq $? ]; then
 	echo "Publish: Updating function code..."
 	aws lambda update-function-code \
 		--function-name $function \
-		--image-uri ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions:${function}
+		--image-uri ${registryID}.dkr.ecr.${region}.amazonaws.com/filterforge-functions:${function}
 	aws lambda wait function-updated --function-name "$function"
 	aws lambda create-function-url-config --function-name "$function" --auth-type NONE
 else
