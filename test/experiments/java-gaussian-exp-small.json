@@ -4,18 +4,18 @@
 	"memorySettings": [512],
 	"parentPayload": {
 		"inputBucket": "gaussian.blur.bucket.test.jca",
-		"inputKey": "inputFile.jpg",
+		"inputKey": "small_img.png",
 		"outputBucket": "gaussian.blur.bucket.test.jca",
-		"outputKey": "blurred-image-java.jpg",
+		"outputKey": "small-blurred-image-java.png",
 		"kernelSize": 5,
 		"sigma": 1.5
 	},
 	"payloads": [
 		{
 			"inputBucket": "gaussian.blur.bucket.test.jca",
-			"inputKey": "inputFile.jpg",
+			"inputKey": "small_img.png",
 			"outputBucket": "gaussian.blur.bucket.test.jca",
-			"outputKey": "blurred-image-java.jpg",
+			"outputKey": "small-blurred-image-java.png",
 			"kernelSize": 5,
 			"sigma": 1.5
 		}
