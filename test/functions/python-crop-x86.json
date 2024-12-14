@@ -1,6 +1,0 @@
-{
-    "function": "filterforge-python-crop-x86",
-    "platform": "AWS Lambda",
-    "source": "../python_template",
-    "endpoint": ""
-}

@@ -1,6 +1,0 @@
-{
-	"function": "filterforge-java-crop-x86",
-    "platform": "AWS Lambda",
-    "source": "../java_functions",
-    "endpoint": ""
-}
