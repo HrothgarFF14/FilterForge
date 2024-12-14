@@ -16,3 +16,5 @@ java_functions/java_functions.iml
 /.idea
 /nodejs_template/deploy/node_modules/.bin
 .fake
+/test/history
+/test/memorySetting

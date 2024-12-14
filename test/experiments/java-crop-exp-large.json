@@ -1,0 +1,56 @@
+{
+    "callWithCLI": true,
+    "callAsync": false,
+    "memorySettings": [2048],
+    "parentPayload": {
+        "inputBucket": "filterforge-uploads",
+        "outputBucket": "filterforge-uploads",
+        "filename": "large_image.png",
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 100,
+        "outputFilename": "large_image-cropped.png"
+    },
+    "payloads": [
+        {
+            "inputBucket": "filterforge-uploads",
+            "outputBucket": "filterforge-uploads",
+            "filename": "large_image.png",
+            "x": 0,
+            "y": 0,
+            "width": 100,
+            "height": 100,
+            "outputFilename": "large_image-cropped.png"
+        }
+    ],
+
+    "runs": 100,
+    "threads": 100,
+    "iterations": 11,
+    "sleepTime": 5,
+    "randomSeed": 42,
+
+    "outputGroups": ["uuid", "cpuType", "vmuptime", "newcontainer", "endpoint", "containerID", "vmID", "zAll", "zTenancy[vmID]", "zTenancy[vmID[iteration]]"],
+    "outputRawOfGroup": ["zTenancy[vmID[iteration]]", "zTenancy[vmID]", "cpuType"],
+    "showAsList": ["vmuptime", "cpuType", "endpoint", "containerID", "vmID", "vmID[iteration]"],
+    "showAsSum": ["newcontainer"],
+
+    "ignoreFromAll": ["zAll", "lang", "version", "linuxVersion", "platform", "hostname"],
+    "ignoreFromGroups": ["1_run_id", "2_thread_id", "cpuModel", "cpuIdle", "cpuIowait", "cpuIrq", "cpuKrn", "cpuNice", "cpuSoftIrq", "cpuUsr"],
+    "ignoreByGroup": {
+      "containerID": ["containerID"],
+      "cpuType": ["cpuType"],
+      "vmID": ["vmID"],
+      "zTenancy[vmID]": ["cpuType"],
+      "zTenancy[vmID[iteration]]": ["cpuType"]
+    },
+    
+    "invalidators": {},
+    "removeDuplicateContainers": false,
+    "overlapFilter": "functionName",
+
+    "openCSV": false,
+    "combineSheets": true,
+    "warmupBuffer": 1
+} 

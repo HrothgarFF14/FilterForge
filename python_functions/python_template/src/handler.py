@@ -5,7 +5,7 @@ from PIL import Image
 from io import BytesIO
 from Inspector import Inspector
 
-def cropFunction(request, context):
+def lambda_handler(request, context):
     inspector = Inspector()
     inspector.inspectAll()
 
