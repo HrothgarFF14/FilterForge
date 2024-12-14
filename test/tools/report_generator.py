@@ -242,11 +242,11 @@ def report(responses, exp):
                     vm_dictionary[run[attribute]]['uses'] += 1
                 else:
                     vm_dictionary[run[attribute]] = {
-                        'uses': 1, 'cpuType': run['cpuType']}
+                        'uses': 1, 'architecture': run['architecture']}
             if valid:
                 for i in range(len(run_results)):
                     run = run_results[i]
-                    run['zTenancy[' + attribute + ']'] = str(vm_dictionary[run[attribute]]['cpuType']) + \
+                    run['zTenancy[' + attribute + ']'] = str(vm_dictionary[run[attribute]]['architecture']) + \
                         " - " + str(vm_dictionary[run[attribute]]['uses'])
                     run['tenants[' + attribute + ']'] = vm_dictionary[run[attribute]]['uses']
                     if attribute == 'vmID[iteration]' and 'zTenancy[vmID]' in categories:
