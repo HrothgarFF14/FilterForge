@@ -1,6 +1,0 @@
-{
-"memorySettings": [512,1024,2048,3200],
-"runs": 50,
-"threads": 50,
-"iterations": 1
-}
