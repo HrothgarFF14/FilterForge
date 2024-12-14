@@ -13,5 +13,5 @@
     "env": "Variables={}",
     "runtime": "python3.12",
     "region": "us-east-1",
-    "function_name": "python_container"
+    "function_name": "python-gaussian-x86"
 }

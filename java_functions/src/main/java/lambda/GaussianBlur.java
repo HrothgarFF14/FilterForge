@@ -14,7 +14,10 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 
 public class GaussianBlur implements RequestHandler<HashMap<String, Object>, HashMap<String, Object>> {
 
@@ -27,7 +30,7 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
         AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
 
         try {
-            // Extract S3 details from the request
+            // Validate and extract S3 details
             String inputBucket = (String) request.get("inputBucket");
             String inputKey = (String) request.get("inputKey");
             String outputBucket = (String) request.get("outputBucket");
@@ -37,15 +40,15 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
                 throw new IllegalArgumentException("Missing required S3 parameters: inputBucket, inputKey, outputBucket, outputKey");
             }
 
-            // Download the image from S3
+            // Download image from S3
             BufferedImage inputImage = downloadImageFromS3(s3Client, inputBucket, inputKey);
 
             // Apply Gaussian blur
-            int kernelSize = request.containsKey("kernelSize") ? (int) request.get("kernelSize") : 5;
-            double sigma = request.containsKey("sigma") ? (double) request.get("sigma") : 1.5;
+            int kernelSize = (int) request.getOrDefault("kernelSize", 5);
+            double sigma = (double) request.getOrDefault("sigma", 1.5);
             BufferedImage blurredImage = applyGaussianBlur(inputImage, kernelSize, sigma);
 
-            // Upload the processed image back to S3
+            // Upload processed image to S3
             uploadImageToS3(s3Client, blurredImage, outputBucket, outputKey, "png");
 
             response.setValue("Image processed and stored at s3://" + outputBucket + "/" + outputKey);
@@ -58,8 +61,7 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
     }
 
     private BufferedImage downloadImageFromS3(AmazonS3 s3Client, String bucket, String key) throws IOException {
-        GetObjectRequest getObjectRequest = new GetObjectRequest(bucket, key);
-        try (InputStream inputStream = s3Client.getObject(getObjectRequest).getObjectContent()) {
+        try (InputStream inputStream = s3Client.getObject(new GetObjectRequest(bucket, key)).getObjectContent()) {
             return ImageIO.read(inputStream);
         }
     }
@@ -81,21 +83,64 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
     public static BufferedImage applyGaussianBlur(BufferedImage image, int kernelSize, double sigma) {
         int width = image.getWidth();
         int height = image.getHeight();
-        BufferedImage outputImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
         double[][] kernel = createGaussianKernel(kernelSize, sigma);
+        BufferedImage outputImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int newPixel = applyKernel(image, x, y, kernel);
-                outputImage.setRGB(x, y, newPixel);
-            }
-        }
+        // Use parallel processing for performance
+        ForkJoinPool pool = ForkJoinPool.commonPool();
+        pool.invoke(new BlurTask(image, outputImage, kernel, 0, 0, width, height));
 
         return outputImage;
     }
 
-    private static double[][] createGaussianKernel(int size, double sigma) {
+    private static class BlurTask extends RecursiveTask<Void> {
+        private static final int TILE_SIZE = 256;
+        private final BufferedImage input;
+        private final BufferedImage output;
+        private final double[][] kernel;
+        private final int startX, startY, width, height;
+
+        public BlurTask(BufferedImage input, BufferedImage output, double[][] kernel, int startX, int startY, int width, int height) {
+            this.input = input;
+            this.output = output;
+            this.kernel = kernel;
+            this.startX = startX;
+            this.startY = startY;
+            this.width = width;
+            this.height = height;
+        }
+
+        @Override
+        protected Void compute() {
+            if (width * height <= TILE_SIZE * TILE_SIZE) {
+                applyBlur();
+            } else {
+                int midX = startX + width / 2;
+                int midY = startY + height / 2;
+
+                // Split the task into 4 subtasks
+                invokeAll(
+                        new BlurTask(input, output, kernel, startX, startY, midX - startX, midY - startY),
+                        new BlurTask(input, output, kernel, midX, startY, startX + width - midX, midY - startY),
+                        new BlurTask(input, output, kernel, startX, midY, midX - startX, startY + height - midY),
+                        new BlurTask(input, output, kernel, midX, midY, startX + width - midX, startY + height - midY)
+                );
+            }
+            return null;
+        }
+
+        private void applyBlur() {
+            for (int y = startY; y < startY + height; y++) {
+                for (int x = startX; x < startX + width; x++) {
+                    int pixel = applyKernel(input, x, y, kernel);
+                    output.setRGB(x, y, pixel);
+                }
+            }
+        }
+    }
+
+    public static double[][] createGaussianKernel(int size, double sigma) {
         double[][] kernel = new double[size][size];
         double sum = 0.0;
         int offset = size / 2;
@@ -136,11 +181,15 @@ public class GaussianBlur implements RequestHandler<HashMap<String, Object>, Has
             }
         }
 
-        int red = (int) clamp((int) r, 0, 255);
-        int green = (int) clamp((int) g, 0, 255);
-        int blue = (int) clamp((int) b, 0, 255);
+        int red = (int) clamp(r, 0, 255);
+        int green = (int) clamp(g, 0, 255);
+        int blue = (int) clamp(b, 0, 255);
 
         return new Color(red, green, blue).getRGB();
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(value, max));
     }
 
     private static int clamp(int value, int min, int max) {

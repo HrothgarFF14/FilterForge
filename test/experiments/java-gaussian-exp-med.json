@@ -1,7 +1,7 @@
 {
 	"callWithCLI": true,
 	"callAsync": false,
-	"memorySettings": [512],
+	"memorySettings": [2048],
 	"parentPayload": {
 		"inputBucket": "gaussian.blur.bucket.test.jca",
 		"inputKey": "med_img.png",
@@ -21,9 +21,9 @@
 		}
 	],
 
-	"runs": 50,
-	"threads": 50,
-	"iterations": 1,
+	"runs": 100,
+	"threads": 100,
+	"iterations": 11,
 	"sleepTime": 5,
 	"randomSeed": 42,
 

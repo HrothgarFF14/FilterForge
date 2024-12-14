@@ -68,25 +68,63 @@ public class GaussianBlurMain implements RequestHandler<HashMap<String, Object>,
         return inspector.finish();
     }
 
-    // Apply the Gaussian Blur to the image using convolution
     public static BufferedImage applyGaussianBlur(BufferedImage image, int kernelSize, double sigma) {
         int width = image.getWidth();
         int height = image.getHeight();
+
+        // Determine tile size
+        int tileSize = 256; // Adjust this size based on memory constraints
+        int overlap = kernelSize / 2; // Overlap to handle kernel edges
+
         BufferedImage outputImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-        // Create the Gaussian kernel
         double[][] kernel = createGaussianKernel(kernelSize, sigma);
 
-        // Apply the convolution to each pixel
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                int newPixel = applyKernel(image, x, y, kernel);
-                outputImage.setRGB(x, y, newPixel);
+        // Process each tile
+        for (int ty = 0; ty < height; ty += tileSize) {
+            for (int tx = 0; tx < width; tx += tileSize) {
+                int tileWidth = Math.min(tileSize, width - tx);
+                int tileHeight = Math.min(tileSize, height - ty);
+
+                // Extend the tile with overlap
+                int extendedX = Math.max(0, tx - overlap);
+                int extendedY = Math.max(0, ty - overlap);
+                int extendedWidth = Math.min(width, tx + tileWidth + overlap) - extendedX;
+                int extendedHeight = Math.min(height, ty + tileHeight + overlap) - extendedY;
+
+                BufferedImage tile = image.getSubimage(extendedX, extendedY, extendedWidth, extendedHeight);
+
+                BufferedImage processedTile = processTile(tile, kernel, tx - extendedX, ty - extendedY, tileWidth, tileHeight);
+
+                // Write the processed tile back to the output image
+                for (int y = 0; y < tileHeight; y++) {
+                    for (int x = 0; x < tileWidth; x++) {
+                        int rgb = processedTile.getRGB(x, y);
+                        outputImage.setRGB(tx + x, ty + y, rgb);
+                    }
+                }
             }
         }
 
         return outputImage;
     }
+
+    private static BufferedImage processTile(BufferedImage tile, double[][] kernel, int offsetX, int offsetY, int tileWidth, int tileHeight) {
+        BufferedImage result = new BufferedImage(tile.getWidth(), tile.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        // Apply the kernel to the tile
+        for (int y = 0; y < tile.getHeight(); y++) {
+            for (int x = 0; x < tile.getWidth(); x++) {
+                if (x >= offsetX && x < offsetX + tileWidth && y >= offsetY && y < offsetY + tileHeight) {
+                    int newPixel = applyKernel(tile, x, y, kernel);
+                    result.setRGB(x, y, newPixel);
+                }
+            }
+        }
+
+        return result;
+    }
+
     
     // Create a Gaussian Kernel
     public static double[][] createGaussianKernel(int size, double sigma) {
@@ -204,15 +242,15 @@ public class GaussianBlurMain implements RequestHandler<HashMap<String, Object>,
         
         try {
             // Load an image from a local file and encode it in base64
-            BufferedImage inputImage = ImageIO.read(new File("/home/jovany/Downloads/input.jpg")); // Replace with your test image
+            BufferedImage inputImage = ImageIO.read(new File("/home/jovany/Pictures/large_image.png")); // Replace with your test image
             
             
-            String base64Image = encodeImageToBase64(inputImage, "JPG");
+            String base64Image = encodeImageToBase64(inputImage, "PNG");
             
             
             request.put("image", base64Image);
-            request.put("kernelSize", 13);
-            request.put("sigma", 3.5);
+            request.put("kernelSize", 5);
+            request.put("sigma", 1.5);
         } catch (IOException e) {
             System.err.println("Error loading input image: " + e.getMessage());
             return;

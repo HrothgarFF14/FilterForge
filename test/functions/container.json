@@ -1,6 +1,0 @@
-{
-	"function": "python_container",
-	"platform": "AWS Lambda",
-	"source": "../python-functions",
-	"endpoint": ""
-}

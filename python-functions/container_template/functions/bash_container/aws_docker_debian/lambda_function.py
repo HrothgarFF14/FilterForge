@@ -24,16 +24,20 @@ def lambda_handler(event, context):
         # Open the image
         img = Image.open(BytesIO(img_data))
         
+        # Convert image mode if necessary
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        
         # Apply Gaussian blur
         blurred_img = img.filter(ImageFilter.GaussianBlur(radius=5))
         
         # Save the processed image to a buffer
         buffer = BytesIO()
-        blurred_img.save(buffer, format=img.format)
+        blurred_img.save(buffer, format="JPEG")  # Use JPEG for compatibility
         buffer.seek(0)
         
         # Upload the image back to the S3 bucket
-        s3.put_object(Bucket=source_bucket, Key=destination_key, Body=buffer)
+        s3.put_object(Bucket=source_bucket, Key=destination_key, Body=buffer, ContentType="image/jpeg")
         
         return inspector.finish()
     
