@@ -1,0 +1,4 @@
+{
+	"function": "bash_container",
+	"source": "../python_template"
+}
