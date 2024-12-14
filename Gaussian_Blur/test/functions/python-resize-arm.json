@@ -1,0 +1,6 @@
+{
+	"function": "python-arm-function-maliha",
+	"platform": "AWS Lambda",
+	"source": "../python-functions",
+	"endpoint": ""
+}

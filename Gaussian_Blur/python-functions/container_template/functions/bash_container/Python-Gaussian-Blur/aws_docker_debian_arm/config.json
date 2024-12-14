@@ -1,0 +1,17 @@
+{
+    "faaset_parent_platform": "aws_docker",
+    "version": "1.0",
+    "role": "arn:aws:iam::941377118987:role/MyAWSLambdaBasicExecutionRole",
+    "subnets": "",
+    "security_groups": "",
+    "timeout": 900,
+    "storage": 512,
+    "profile": "default",
+    "architectures": "arm64",
+    "memory": 512,
+    "handler": "lambda_function.lambda_handler",
+    "env": "Variables={}",
+    "runtime": "python3.12",
+    "region": "us-east-1",
+    "function_name": "python-gaussian-arm"
+}

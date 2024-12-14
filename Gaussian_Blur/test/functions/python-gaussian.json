@@ -1,0 +1,6 @@
+{
+	"function": "python-gaussian-x86",
+	"platform": "AWS Lambda",
+	"source": "../python-functions",
+	"endpoint": ""
+}

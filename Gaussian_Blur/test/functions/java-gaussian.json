@@ -1,0 +1,6 @@
+{
+	"function": "java-gaussian-blur-x86",
+	"platform": "AWS Lambda",
+	"source": "../java_functions",
+	"endpoint": ""
+}
