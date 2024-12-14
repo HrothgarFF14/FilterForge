@@ -12,15 +12,12 @@ FROM python:3.12-slim-bookworm
 # running at the same time fighting for ports.
 #RUN add-apt-repository -y http://archive.ubuntu.com/ubuntu
 RUN apt-get update
-RUN apt-get install -y curl jq sysbench
+RUN apt-get install -y curl jq
 #RUN apt-get install -y curl speedtest-cli wget stress software-properties-common
 
 # Download sysbench
 #RUN curl -s https://packagecloud.io/install/repositories/akopytov/sysbench/script.deb.sh | bash
 #RUN apt -y install sysbench
-
-# Install dependencies
-RUN pip install pillow
 
 # Define and create function directory
 ENV FUNCTION_DIR="/var/task"
@@ -30,6 +27,7 @@ RUN mkdir -p ${FUNCTION_DIR}
 COPY . ${FUNCTION_DIR}
 
 RUN pip install boto3 botocore
+RUN pip install pillow
 
 # Install the runtime interface client
 RUN pip install \

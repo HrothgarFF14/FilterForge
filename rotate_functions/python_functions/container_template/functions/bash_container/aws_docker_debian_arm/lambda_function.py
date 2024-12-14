@@ -18,7 +18,7 @@ def lambda_handler(event, context):
     if 'body' in event:
         event = json.loads(event['body'])
     
-    response = handler.yourFunction(event, context)
+    response = handler.rotate(event, context)
     
     # Async Implementation. If the request contains a bucket name
     # SAAF results will be saved to the bucket. Implemented so that

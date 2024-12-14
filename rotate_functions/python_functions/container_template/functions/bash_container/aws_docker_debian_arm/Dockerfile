@@ -27,6 +27,7 @@ RUN mkdir -p ${FUNCTION_DIR}
 COPY . ${FUNCTION_DIR}
 
 RUN pip install boto3 botocore
+RUN pip install pillow
 
 # Install the runtime interface client
 RUN pip install \

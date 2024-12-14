@@ -24,4 +24,4 @@ rm -rf ./.build/experiments || true
 
 echo "Build: Building Docker Image..."
 cd .build
-docker buildx build --platform linux/amd64 -t ${function} . >> ../build.log
+docker build -t ${function} . >> ../build.log

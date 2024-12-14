@@ -1,5 +1,5 @@
 #!/bin/bash
-json='{"bucketName":"filter-forge-cnlwebber","objectKey":"med-img.png","angle":180}'
+json={"\"name\"":"\"Susan\u0020Smith\""}
 
 location=$1
 cd "$location" || exit

@@ -1,7 +1,7 @@
 {
     "faaset_parent_platform": "aws_docker",
     "version": "1.0",
-    "role": "arn:aws:iam::616835888336:role/service-role/simple_microservice_role",
+    "role": "arn:aws:iam::060795940772:role/MyAWSLambdaBasicExecutionRole",
     "subnets": "",
     "security_groups": "",
     "timeout": 900,

@@ -20,17 +20,17 @@ cd ./.build || exit
 
 echo "Creating AWS Registry..."
 region=$(aws configure get region)
-aws ecr create-repository --repository-name saaf-functions-python-x86 --image-scanning-configuration scanOnPush=true
+aws ecr create-repository --repository-name saaf-functions-x86 --image-scanning-configuration scanOnPush=true
 
 echo "Pushing Docker Image..."
 registryID=$(aws ecr describe-registry | jq '.registryId' | tr -d '"')
-docker tag ${function}:latest ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions-python-x86:${function}
+docker tag ${function}:latest ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions-x86:${function}
 aws ecr get-login-password | docker login --username AWS --password-stdin ${registryID}.dkr.ecr.${region}.amazonaws.com
-docker push ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions-python-x86:${function}
+docker push ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions-x86:${function}
 docker logout
 
 echo "Deploying function..."
-code={\"ImageUri\":\"${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions-python-x86:${function}\"}
+code={\"ImageUri\":\"${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions-x86:${function}\"}
 
 aws lambda get-function --function-name $function > /dev/null 2>&1
 if [ 0 -eq $? ]; then
@@ -46,7 +46,7 @@ if [ 0 -eq $? ]; then
 	echo "Publish: Updating function code..."
 	aws lambda update-function-code \
 		--function-name $function \
-		--image-uri ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions-python-x86:${function} 
+		--image-uri ${registryID}.dkr.ecr.${region}.amazonaws.com/saaf-functions-x86:${function} 
 	aws lambda wait function-updated --function-name "$function"
 	aws lambda create-function-url-config --function-name "$function" --auth-type NONE
 else

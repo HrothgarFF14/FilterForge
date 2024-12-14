@@ -59,7 +59,6 @@ public class Rotate implements RequestHandler<HashMap<String, Object>, HashMap<S
                 return sendError(inspector, "Invalid input parameters", response);
             }
 
-            // Initialize S3 client
             AmazonS3 s3Client = AmazonS3ClientBuilder.defaultClient();
 
             logger.log("Downloading image from S3...");

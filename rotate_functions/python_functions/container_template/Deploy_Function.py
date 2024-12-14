@@ -24,7 +24,7 @@ config = {
 # Python wrapper function, you probably won't need to change this...
 @FaaSET.cloud_function(platform="aws_docker_debian", config=config, force_deploy=True)
 def bash_container(request, context): 
-    from SAAF import Inspector
+    from container_template.functions.bash_container.aws_docker_debian_arm.SAAF import Inspector
     import json
     
     inspector = Inspector() 
