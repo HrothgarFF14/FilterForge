@@ -4,7 +4,7 @@
 inputBucket="test.bucket.462562f24.mh"        # Replace with your input bucket name
 outputBucket="test.bucket.462562f24.mh"      # Replace with your output bucket name
 inputKey="Inputimage/med-img.png"                  # Replace with your input file name
-outputKey="outputImage/resizedImage"         # Replace with your desired output file name
+outputKey="outputImage/resizedImagenew"         # Replace with your desired output file name
 
 # Resize dimensions
 targetWidth=60                         # Desired width of the resized image

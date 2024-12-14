@@ -1,0 +1,6 @@
+{
+    "function":"ResizeImage",
+    "platform":"AWS Lambda",
+    "source":"../java_functions",
+    "endpoint": ""
+}

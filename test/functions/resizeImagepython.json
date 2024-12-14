@@ -1,0 +1,6 @@
+{
+    "function":"myResizeImage",
+    "platform":"AWS Lambda",
+    "source":"../python_functions",
+    "endpoint": ""
+}

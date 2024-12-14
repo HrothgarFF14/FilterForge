@@ -50,7 +50,9 @@ public class ResizeImage implements RequestHandler<HashMap<String, Object>, Hash
 
             response.setValue("Image resized and stored at s3://" + outputBucket + "/" + outputKey);
         } catch (Exception e) {
-            response.setError("Error processing image: " + e.getMessage());
+            //response.setError("Error processing image: " + e.getMessage());
+            System.out.print("Error processing image: \" + e.getMessage()");
+	     e.printStackTrace();
         }
 
         inspector.consumeResponse(response);
