@@ -13,7 +13,7 @@ through Amazon Web Services (AWS).
 - **Python Functions**: [Crop/python_functions](Crop/python_functions)
 - **Tests**: [Crop/test](Crop/test)
 - **author**: Louis Lomboy
-- 
+
 ### Gaussian Blur
 
 - **Java Functions**: [Gaussian_Blur/java_functions](Gaussian_Blur/java_functions)
