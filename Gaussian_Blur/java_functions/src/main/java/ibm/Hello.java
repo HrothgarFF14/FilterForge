@@ -1,4 +1,4 @@
-package main.java.ibm;
+package ibm;
 import com.google.gson.*;
 import saaf.Inspector;
 import java.util.HashMap;

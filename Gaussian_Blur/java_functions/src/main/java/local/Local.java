@@ -4,6 +4,11 @@
  * and open the template in the editor.
  */
 package local;
+<<<<<<<< HEAD:Gaussian_Blur/java_functions/src/main/java/local/Local.java
+========
+
+import java.util.HashMap;
+>>>>>>>> crop_java:Crop/java_functions/src/main/java/local/Local.java
 
 /**
  *

@@ -1,4 +1,3 @@
-
 /**/.DS_Store
 *.prefs
 java_template/.classpath
@@ -16,5 +15,6 @@ SAAF/nodejs_template/deploy/node_modules/.bin/uuid
 java_functions/java_functions.iml
 /.idea
 /nodejs_template/deploy/node_modules/.bin
-SAAF/nodejs_template/deploy/node_modules/.bin/uuid
-
+.fake
+/test/history
+/test/memorySetting
